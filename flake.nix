@@ -15,53 +15,55 @@
 
   outputs = {
     self,
-    nixpkgs,
-    systems,
-    devenv,
+    flake-parts,
     poetry2nix,
-  } @ inputs: let
-    forEachSystem = nixpkgs.lib.genAttrs (import systems);
-  in {
-    packages = forEachSystem (system: let
-      pkgs = nixpkgs.legacyPackages.${system};
-      poetry2nix' = poetry2nix.lib.mkPoetry2Nix {inherit pkgs;};
-    in {
-      default = self.packages.${system}.db;
-      db = poetry2nix'.mkPoetryApplication {
-        projectDir = self;
-      };
-    });
+    ...
+  } @ inputs:
+    flake-parts.lib.mkFlake {inherit inputs;} {
+      imports = [
+        inputs.devenv.flakeModule
+      ];
 
-    devShells = forEachSystem (system: let
-      pkgs = nixpkgs.legacyPackages.${system};
-    in {
-      default = devenv.lib.mkShell {
-        inherit inputs pkgs;
+      systems = import inputs.systems;
 
-        modules = [
-          {
-            packages = with pkgs; [git coreutils];
+      perSystem = {
+        config,
+        pkgs,
+        system,
+        ...
+      }: let
+        poetry2nix' = poetry2nix.lib.mkPoetry2Nix {inherit pkgs;};
+      in {
+        packages.default = poetry2nix'.mkPoetryApplication {
+          projectDir = self;
+          preferWheels = true;
+        };
 
-            services.postgres = {
+        devenv.shells.default = {
+          packages = with pkgs; [
+            config.packages.default
+            git
+            coreutils
+          ];
+
+          services.postgres = {
+            enable = true;
+
+            initialDatabases = [{name = "wizbattle";}];
+
+            settings = {
+              unix_socket_directories = "/tmp";
+            };
+          };
+
+          languages = {
+            nix.enable = true;
+            python = {
               enable = true;
-
-              initialDatabases = [{name = "wizbattle";}];
-
-              settings = {
-                unix_socket_directories = "/tmp";
-              };
+              poetry.enable = true;
             };
-
-            languages = {
-              nix.enable = true;
-              python = {
-                enable = true;
-                poetry.enable = true;
-              };
-            };
-          }
-        ];
+          };
+        };
       };
-    });
-  };
+    };
 }
