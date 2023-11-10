@@ -136,3 +136,6 @@ Thumbs.db
 /.vs/
 /.vscode/
 /.idea/
+
+# Game type list
+types*.json

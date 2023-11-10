@@ -12,8 +12,11 @@ click = "^8.1.7"
 katsuba = "^0.1.0"
 
 [tool.poetry.group.dev.dependencies]
-black = "^23.10.1"
-isort = "^5.12.0"
+ruff = "^0.1.5"
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
 
 [build-system]
 requires = ["poetry-core"]
