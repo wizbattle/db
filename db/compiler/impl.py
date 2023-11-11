@@ -27,15 +27,8 @@ class SpellCompiler(EffectVisitor):
         self.visit(spell)
 
     def steal_health(self):
-        # Attack with the current configuration.
         self.emitter.emit_attack()
-
-        # Heal half of the base damage back.
-        with self.regalloc.borrow() as tmp:
-            self.emitter.emit_put(tmp, 1)
-            self.emitter.emit_shr(Register.ARG, tmp)
-            self.emitter.emit_heal()
-
+        self.emitter.emit_heal()
 
     def visit_spell_effect(self, obj: LazyObject):
         match obj["m_effectType"]:
