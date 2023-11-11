@@ -7,6 +7,8 @@ class DebugEmitter(CodeEmitter):
     """A code emitter which produces human-readable opcodes for debugging."""
 
     def __init__(self):
+        super().__init__()
+
         self.instruction_count = 0
         self.buf = io.StringIO()
 
@@ -20,44 +22,47 @@ class DebugEmitter(CodeEmitter):
     def get_value(self) -> str:
         return self.buf.getvalue()
 
-    def emit_put(self, operand: int):
-        self._write(f"PUT {operand}")
+    def emit_put(self, reg: Register, value: int):
+        self._write(f"PUT ${reg.name}, {value}")
 
-    def emit_add(self):
-        self._write("ADD")
+    def emit_add(self, dest: Register, source: Register):
+        self._write(f"ADD ${dest.name}, ${source.name}")
 
-    def emit_mul(self):
-        self._write("MUL")
+    def emit_mul(self, dest: Register, source: Register):
+        self._write(f"MUL ${dest.name}, ${source.name}")
 
-    def emit_and(self):
-        self._write("AND")
+    def emit_shr(self, dest: Register, source: Register):
+        self._write(f"SHR ${dest.name}, ${source.name}")
 
-    def emit_or(self):
-        self._write("OR")
+    def emit_and(self, dest: Register, source: Register):
+        self._write(f"AND ${dest.name}, ${source.name}")
 
-    def emit_not(self):
-        self._write("NOT")
+    def emit_or(self, dest: Register, source: Register):
+        self._write(f"OR ${dest.name}, ${source.name}")
 
-    def emit_push(self, stack: Stack):
-        self._write(f"PUSH {stack.name}")
+    def emit_not(self, dest: Register, source: Register):
+        self._write(f"NOT ${dest.name}, ${source.name}")
+
+    def emit_push(self, source: Register, stack: Stack):
+        self._write(f"PUSH {stack.name}, ${source.name}")
 
     def emit_pop(self, stack: Stack):
         self._write(f"POP {stack.name}")
 
-    def emit_load(self, reg: Register):
-        self._write(f"LOAD {reg.name}")
-
-    def emit_store(self, reg: Register):
-        self._write(f"STORE {reg.name}")
-
     def emit_jmp(self, off: int):
         self._write(f"JMP {off}")
 
-    def emit_jeq(self, off: int):
-        self._write(f"JEQ {off}")
+    def emit_jeq(self, a: Register, b: Register, off: int):
+        self._write(f"JEQ ${a.name}, ${b.name}, {off}")
 
     def emit_rng(self, count: int):
         self._write(f"RNG {count}")
+
+    def emit_attack(self):
+        self._write("ATTACK")
+
+    def emit_heal(self):
+        self._write("HEAL")
 
     def emit_reshuffle(self):
         self._write("RESHUFFLE")

@@ -1,7 +1,7 @@
 from katsuba import op
 
 
-def make_bind_deserializer(type_list: op.TypeList) -> op.Serializer:
+def make_bind_serializer(type_list: op.TypeList) -> op.Serializer:
     """Creates a new BINd deserializer given a list of types."""
 
     # Apply the fixed base configuration used by all game files.

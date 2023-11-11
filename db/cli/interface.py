@@ -2,8 +2,9 @@ from pathlib import Path
 
 import click
 
-from .config import Config
 from db import commands
+
+from .config import Config
 
 
 @click.group()
@@ -18,11 +19,11 @@ def cli(ctx: click.Context, verbose: bool):
 @click.pass_obj
 @click.argument(
     "root_wad",
-    type=click.Path(exists=True, dir_okay=False, path_type=Path)
+    type=click.Path(exists=True, dir_okay=False, path_type=Path),
 )
 @click.argument(
     "types_json",
-    type=click.Path(exists=True, dir_okay=False, path_type=Path)
+    type=click.Path(exists=True, dir_okay=False, path_type=Path),
 )
 def build(config: Config, root_wad: Path, types_json: Path):
     """
@@ -35,7 +36,6 @@ def build(config: Config, root_wad: Path, types_json: Path):
     and can be chained together in a single command invocation as needed.
     """
 
-    click.echo("Building database entries...")
     config.load_root_archive(root_wad)
     config.load_types_json(types_json)
 
@@ -45,3 +45,10 @@ def build(config: Config, root_wad: Path, types_json: Path):
 def spells(config: Config):
     """Assembles spell data in the database."""
     commands.handle_spells(config)
+
+@build.command()
+@click.pass_obj
+@click.argument("spell_name")
+def show(config: Config, spell_name: str):
+    """Shows code generation for a particular spell."""
+    commands.handle_debug(config, spell_name.encode())
