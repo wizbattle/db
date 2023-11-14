@@ -1,4 +1,5 @@
 from enum import IntEnum
+from typing import Optional
 
 
 class Register(IntEnum):
@@ -23,12 +24,29 @@ class Register(IntEnum):
     AP = 0x07
 
 
+class Label:
+    """
+    Marks a position in generated code.
+    
+    Labels can either be passed to a jump instruction directly or bound
+    at a later time after getting one.
+    """
+
+    def bind(self):
+        """Binds a label obtained from a jump instruction."""
+        raise NotImplementedError()
+
+
 class CodeEmitter:
     """
     Interface for code emitter backends in the spell compiler.
 
     Implementors must treat all operands as 32-bit signed values.
     """
+
+    def label(self, *, bind: bool = True) -> Label:
+        """Gets a label to be passed to a jump instruction for back jumps."""
+        raise NotImplementedError()
 
     def emit_mov(self, dest: Register, source: Register):
         """Moves a value from source to destination register."""
@@ -78,11 +96,15 @@ class CodeEmitter:
         """Clears the given bit index in the destination register."""
         raise NotImplementedError()
 
-    def emit_jmp(self, off: int):
+    def emit_jr(self, reg: Register):
+        """Jumps over the instructions in the given register."""
+        raise NotImplementedError()
+
+    def emit_jmp(self, label: Optional[Label]) -> Optional[Label]:
         """Unconditionally jumps over off instructions."""
         raise NotImplementedError()
 
-    def emit_jeq(self, a: Register, b: Register, off: int):
+    def emit_jeq(self, a: Register, b: Register, label: Optional[Label]) -> Optional[Label]:
         """Compares two registers and jumps over off instructions if equal."""
         raise NotImplementedError()
 

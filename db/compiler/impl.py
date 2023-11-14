@@ -23,6 +23,7 @@ class SpellCompiler(EffectVisitor):
         self.regalloc = RegisterAllocator(register_limit)
 
         self._effect_handlers = {
+            1: self.damage,
             5: self.steal_health,
         }
 
@@ -59,6 +60,9 @@ class SpellCompiler(EffectVisitor):
         self.apply_heal_modifier(effect)
         self.emitter.emit_drain()
 
+    def damage(self, effect: LazyObject):
+        self.attack()
+
     def steal_health(self, effect: LazyObject):
         self.attack()
         self.drain(effect)
@@ -70,3 +74,23 @@ class SpellCompiler(EffectVisitor):
             handler(obj)
         else:
             raise NotImplementedError(f"encountered unsupported effect type '{effect_type}'")
+
+    def visit_random_spell_effect(self, obj: LazyObject):
+        entry_labels = []
+        exit_label = self.emitter.label(bind=False)
+        sub_effects = obj["m_effectList"]
+
+        # Randomly select one of the next few jump instructions.
+        self.emitter.emit_rng(len(sub_effects))
+        for _ in range(len(sub_effects)):
+            entry_labels.append(self.emitter.emit_jmp(None))
+
+        # Now emit handler code for the spell effects themselves.
+        for sub_effect in sub_effects:
+            entry_labels.pop(0).bind()
+            self.dispatch_effect(sub_effect)
+
+            if len(entry_labels) != 0:
+                self.emitter.emit_jmp(exit_label)
+
+        exit_label.bind()

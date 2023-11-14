@@ -1,6 +1,16 @@
 import io
+from typing import Optional
 
-from .emitter import CodeEmitter, Register
+from .emitter import CodeEmitter, Label, Register
+
+
+class DebugLabel(Label):
+    def __init__(self, name: str, emitter: "DebugEmitter"):
+        self.name = name
+        self._emitter = emitter
+
+    def bind(self):
+        self._emitter._write(f"{self.name}:")
 
 
 class DebugEmitter(CodeEmitter):
@@ -10,6 +20,7 @@ class DebugEmitter(CodeEmitter):
         super().__init__()
 
         self.instruction_count = 0
+        self.label_count = 0
         self.buf = io.StringIO()
 
     def _write(self, opcode: str):
@@ -21,6 +32,19 @@ class DebugEmitter(CodeEmitter):
 
     def get_value(self) -> str:
         return self.buf.getvalue()
+
+    def _label(self) -> DebugLabel:
+        label = DebugLabel(f"L{self.label_count}", self)
+        self.label_count += 1
+
+        return label
+
+    def label(self, *, bind: bool = True) -> Label:
+        label = self._label()
+        if bind:
+            label.bind()
+
+        return label
 
     def emit_mov(self, dest: Register, source: Register):
         self._write(f"MOV ${dest.name}, ${source.name}")
@@ -59,11 +83,26 @@ class DebugEmitter(CodeEmitter):
     def emit_bclr(self, dest: Register, bit: int):
         self._write(f"BCLR ${dest.name}, {bit}")
 
-    def emit_jmp(self, off: int):
-        self._write(f"JMP {off}")
+    def emit_jr(self, reg: Register):
+        self._write(f"JR ${reg.name}")
 
-    def emit_jeq(self, a: Register, b: Register, off: int):
-        self._write(f"JEQ ${a.name}, ${b.name}, {off}")
+    def emit_jmp(self, label: Optional[Label]) -> Optional[Label]:
+        if label is None:
+            label = self._label()
+            self._write(f"JMP #{label.name}")
+            return label
+        else:
+            self._write(f"JMP #{label.name}")
+            return None
+
+    def emit_jeq(self, a: Register, b: Register, label: Optional[Label]) -> Optional[Label]:
+        if label is None:
+            label = self._label()
+            self._write(f"JEQ ${a.name}, ${b.name}, #{label.name}")
+            return label
+        else:
+            self._write(f"JEQ ${a.name}, ${b.name}, #{label.name}")
+            return None
 
     def emit_rng(self, count: int):
         self._write(f"RNG {count}")

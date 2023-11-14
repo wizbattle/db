@@ -33,8 +33,13 @@ class EffectVisitor:
         """
 
         for effect in spell["m_effects"]:
-            fn = getattr(self, _TYPE_HASH_TO_VISITOR[effect.type_hash])
-            fn(effect)
+            self.dispatch_effect(effect)
+
+    def dispatch_effect(self, effect: LazyObject):
+        """Dispatches a SpellEffect object to its proper handler."""
+
+        fn = getattr(self, _TYPE_HASH_TO_VISITOR[effect.type_hash])
+        fn(effect)
 
     def visit_spell_effect(self, obj: LazyObject):
         """Visits a `class SpellEffect` object."""
