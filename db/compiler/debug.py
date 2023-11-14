@@ -1,6 +1,6 @@
 import io
 
-from .emitter import CodeEmitter, Register, Stack
+from .emitter import CodeEmitter, Register
 
 
 class DebugEmitter(CodeEmitter):
@@ -22,17 +22,27 @@ class DebugEmitter(CodeEmitter):
     def get_value(self) -> str:
         return self.buf.getvalue()
 
-    def emit_put(self, reg: Register, value: int):
-        self._write(f"PUT ${reg.name}, {value}")
+    def emit_mov(self, dest: Register, source: Register):
+        self._write(f"MOV ${dest.name}, ${source.name}")
+
+    def emit_load(self, reg: Register, value: int):
+        self._write(f"LOAD ${reg.name}, {value}")
 
     def emit_add(self, dest: Register, source: Register):
         self._write(f"ADD ${dest.name}, ${source.name}")
 
+    def emit_addi(self, dest: Register, value: int):
+        self._write(f"ADDI ${dest.name}, {value}")
+
+    def emit_percentage(self, dest: Register, source: Register):
+        """Calculates a percentage of the destination register."""
+        self._write(f"PCT ${dest.name}, ${source.name}")
+
     def emit_mul(self, dest: Register, source: Register):
         self._write(f"MUL ${dest.name}, ${source.name}")
 
-    def emit_shr(self, dest: Register, source: Register):
-        self._write(f"SHR ${dest.name}, ${source.name}")
+    def emit_div(self, dest: Register, source: Register):
+        self._write(f"DIV ${dest.name}, ${source.name}")
 
     def emit_and(self, dest: Register, source: Register):
         self._write(f"AND ${dest.name}, ${source.name}")
@@ -40,14 +50,14 @@ class DebugEmitter(CodeEmitter):
     def emit_or(self, dest: Register, source: Register):
         self._write(f"OR ${dest.name}, ${source.name}")
 
-    def emit_not(self, dest: Register, source: Register):
-        self._write(f"NOT ${dest.name}, ${source.name}")
+    def emit_xor(self, dest: Register, source: Register):
+        self._write(f"XOR ${dest.name}, ${source.name}")
 
-    def emit_push(self, source: Register, stack: Stack):
-        self._write(f"PUSH {stack.name}, ${source.name}")
+    def emit_bset(self, dest: Register, bit: int):
+        self._write(f"BSET ${dest.name}, {bit}")
 
-    def emit_pop(self, stack: Stack):
-        self._write(f"POP {stack.name}")
+    def emit_bclr(self, dest: Register, bit: int):
+        self._write(f"BCLR ${dest.name}, {bit}")
 
     def emit_jmp(self, off: int):
         self._write(f"JMP {off}")
@@ -63,6 +73,9 @@ class DebugEmitter(CodeEmitter):
 
     def emit_heal(self):
         self._write("HEAL")
+
+    def emit_drain(self):
+        self._write("DRAIN")
 
     def emit_reshuffle(self):
         self._write("RESHUFFLE")

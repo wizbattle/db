@@ -11,7 +11,7 @@ def handle(config: Config):
     serializer = make_bind_serializer(config.types)
     for file in config.archive.iter_glob("Spells/**/*.xml"):
         obj = config.archive.deserialize(file, serializer)
-        print(obj["m_name"])
+        click.echo(obj["m_name"])
 
 
 def debug(config: Config, name: bytes):
@@ -21,12 +21,13 @@ def debug(config: Config, name: bytes):
     for file in config.archive.iter_glob("Spells/**/*.xml"):
         obj = config.archive.deserialize(file, serializer)
         if obj["m_name"] == name:
+            print(file)
             emitter = DebugEmitter()
 
             compiler = SpellCompiler(emitter)
             compiler.compile(obj)
 
-            print(emitter.get_value())
+            click.echo(emitter.get_value())
             return
 
     raise click.UsageError(f"no spell named '{name.decode()}' found in archive")

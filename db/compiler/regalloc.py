@@ -43,11 +43,11 @@ class RegisterAllocator:
             raise RuntimeError("register allocation limit exceeded")
 
         self._mask |= (1 << reg)
-        return Register(Register.REG0.value + reg)
+        return Register(Register.REG0 + reg)
 
     def release(self, reg: Register):
         """Releases a previously allocated register."""
-        self._mask &= ~(1 << (reg.value - Register.REG0.value))
+        self._mask &= ~(1 << (reg.value - Register.REG0))
 
     @contextmanager
     def borrow(self) -> Register:
