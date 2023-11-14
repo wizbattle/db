@@ -42,6 +42,8 @@ class SpellCompiler(EffectVisitor):
 
     def apply_heal_modifier(self, effect: LazyObject):
         modifier = int(effect["m_healModifier"] * 100)
+        if modifier == 100:
+            return
 
         with self.regalloc.borrow() as tmp:
             self.emitter.emit_load(tmp, modifier)
